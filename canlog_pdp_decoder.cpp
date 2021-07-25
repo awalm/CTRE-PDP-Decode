@@ -1,5 +1,8 @@
 #include <string>
 #include <fstream>
+#include <map>
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -78,13 +81,13 @@ union PdpStatusEnergy {
 };
 
 //API ID mappings
-const std::map<uint32_t, int> api_id_map = 
-{
-    {0x50, PdpStatus1}, 
-    {0x51, PdpStatus2}, 
-    {0x52, PdpStatus3},
-    {0x5D, PdpStatusEnergy}
-};
+// const std::map<uint32_t, int> api_id_map = 
+// {
+//     {0x50, PdpStatus1}, 
+//     {0x51, PdpStatus2}, 
+//     {0x52, PdpStatus3},
+//     {0x5D, PdpStatusEnergy}
+// };
 
 //TODO:
 //Read Log file
@@ -92,9 +95,9 @@ const std::map<uint32_t, int> api_id_map =
 //call decode on it
 
 struct CanMsg {
-  uint32_t arb_id,
-  uint8_t data[8]
-}
+  uint32_t arb_id;
+  uint8_t data[8];
+};
 
 //Status to CSV Column mappings
 // const std::map<uint32_t, int> dataToColMap = 
@@ -105,10 +108,9 @@ struct CanMsg {
 //     {0x5D, StatEnergy}
 // };
 
-int main(int argc, char *argv[])) {
+int main(int argc, char *argv[]) {
   //usage: first arg is the filename
 
-  cout << "Opening file:" + argv[1];
   std::ifstream inFile(argv[1]);
   if(!inFile.is_open()) throw std::runtime_error("Could not open file");
 
@@ -119,7 +121,7 @@ int main(int argc, char *argv[])) {
     if(inFile.good())
     {
         // Extract the first line in the file
-        std::getline(myFile, line);
+        std::getline(inFile, line);
 
         // Create a stringstream from line
         std::stringstream ss(line);
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])) {
 }
 
 
-void decodeCanDataFromLine(CanMsg canMsg&, string rawLine&)
+void decodeCanDataFromLine(CanMsg &canMsg, string &rawLine)
 {
   
 }
