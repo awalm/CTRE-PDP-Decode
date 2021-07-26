@@ -3,82 +3,109 @@
 #include <map>
 #include <iostream>
 #include <sstream>
-
-using namespace std;
+#include <vector>
 
 //Rough C++ program to decode raw can logs into a csv file 
 //Data from: https://github.com/wpilibsuite/allwpilib/blob/master/hal/src/main/native/athena/PDP.cpp
 
 union PdpStatus1 {
-  uint8_t data[8];
-  struct Bits {
-    unsigned chan1_h8 : 8;
-    unsigned chan2_h6 : 6;
-    unsigned chan1_l2 : 2;
-    unsigned chan3_h4 : 4;
-    unsigned chan2_l4 : 4;
-    unsigned chan4_h2 : 2;
-    unsigned chan3_l6 : 6;
-    unsigned chan4_l8 : 8;
-    unsigned chan5_h8 : 8;
-    unsigned chan6_h6 : 6;
-    unsigned chan5_l2 : 2;
-    unsigned reserved4 : 4;
-    unsigned chan6_l4 : 4;
-  } bits;
+	uint8_t data[8];
+	struct Bits {
+		unsigned chan1_h8 : 8;
+		unsigned chan2_h6 : 6;
+		unsigned chan1_l2 : 2;
+		unsigned chan3_h4 : 4;
+		unsigned chan2_l4 : 4;
+		unsigned chan4_h2 : 2;
+		unsigned chan3_l6 : 6;
+		unsigned chan4_l8 : 8;
+		unsigned chan5_h8 : 8;
+		unsigned chan6_h6 : 6;
+		unsigned chan5_l2 : 2;
+		unsigned reserved4 : 4;
+		unsigned chan6_l4 : 4;
+	} bits;
 };
 
 union PdpStatus2 {
-  uint8_t data[8];
-  struct Bits {
-    unsigned chan7_h8 : 8;
-    unsigned chan8_h6 : 6;
-    unsigned chan7_l2 : 2;
-    unsigned chan9_h4 : 4;
-    unsigned chan8_l4 : 4;
-    unsigned chan10_h2 : 2;
-    unsigned chan9_l6 : 6;
-    unsigned chan10_l8 : 8;
-    unsigned chan11_h8 : 8;
-    unsigned chan12_h6 : 6;
-    unsigned chan11_l2 : 2;
-    unsigned reserved4 : 4;
-    unsigned chan12_l4 : 4;
-  } bits;
+	uint8_t data[8];
+	struct Bits {
+		unsigned chan7_h8 : 8;
+		unsigned chan8_h6 : 6;
+		unsigned chan7_l2 : 2;
+		unsigned chan9_h4 : 4;
+		unsigned chan8_l4 : 4;
+		unsigned chan10_h2 : 2;
+		unsigned chan9_l6 : 6;
+		unsigned chan10_l8 : 8;
+		unsigned chan11_h8 : 8;
+		unsigned chan12_h6 : 6;
+		unsigned chan11_l2 : 2;
+		unsigned reserved4 : 4;
+		unsigned chan12_l4 : 4;
+	} bits;
 };
 
 union PdpStatus3 {
-  uint8_t data[8];
-  struct Bits {
-    unsigned chan13_h8 : 8;
-    unsigned chan14_h6 : 6;
-    unsigned chan13_l2 : 2;
-    unsigned chan15_h4 : 4;
-    unsigned chan14_l4 : 4;
-    unsigned chan16_h2 : 2;
-    unsigned chan15_l6 : 6;
-    unsigned chan16_l8 : 8;
-    unsigned internalResBattery_mOhms : 8;
-    unsigned busVoltage : 8;
-    unsigned temp : 8;
-  } bits;
+	uint8_t data[8];
+	struct Bits {
+		unsigned chan13_h8 : 8;
+		unsigned chan14_h6 : 6;
+		unsigned chan13_l2 : 2;
+		unsigned chan15_h4 : 4;
+		unsigned chan14_l4 : 4;
+		unsigned chan16_h2 : 2;
+		unsigned chan15_l6 : 6;
+		unsigned chan16_l8 : 8;
+		unsigned internalResBattery_mOhms : 8;
+		unsigned busVoltage : 8;
+		unsigned temp : 8;
+	} bits;
 };
 
 union PdpStatusEnergy {
-  uint8_t data[8];
-  struct Bits {
-    unsigned TmeasMs_likelywillbe20ms_ : 8;
-    unsigned TotalCurrent_125mAperunit_h8 : 8;
-    unsigned Power_125mWperunit_h4 : 4;
-    unsigned TotalCurrent_125mAperunit_l4 : 4;
-    unsigned Power_125mWperunit_m8 : 8;
-    unsigned Energy_125mWPerUnitXTmeas_h4 : 4;
-    unsigned Power_125mWperunit_l4 : 4;
-    unsigned Energy_125mWPerUnitXTmeas_mh8 : 8;
-    unsigned Energy_125mWPerUnitXTmeas_ml8 : 8;
-    unsigned Energy_125mWPerUnitXTmeas_l8 : 8;
-  } bits;
+	uint8_t data[8];
+	struct Bits {
+		unsigned TmeasMs_likelywillbe20ms_ : 8;
+		unsigned TotalCurrent_125mAperunit_h8 : 8;
+		unsigned Power_125mWperunit_h4 : 4;
+		unsigned TotalCurrent_125mAperunit_l4 : 4;
+		unsigned Power_125mWperunit_m8 : 8;
+		unsigned Energy_125mWPerUnitXTmeas_h4 : 4;
+		unsigned Power_125mWperunit_l4 : 4;
+		unsigned Energy_125mWPerUnitXTmeas_mh8 : 8;
+		unsigned Energy_125mWPerUnitXTmeas_ml8 : 8;
+		unsigned Energy_125mWPerUnitXTmeas_l8 : 8;
+	} bits;
 };
+
+enum class PdpDataPoints
+{
+	PdpDataPointsNone,
+	Timestamp,
+	BusVoltage,
+	TotalCurrent,
+	TotalPower,
+	Channel1,
+	Channel2,
+	Channel3,
+	Channel4,
+	Channel5,
+	Channel6,
+	Channel7,
+	Channel8,
+	Channel9,
+	Channel10,
+	Channel11,
+	Channel12,
+	Channel13,
+	Channel14,
+	Channel15,
+	Channel16,
+	Temperature,
+	BatteryInternalResistance
+};
+
 
 //API ID mappings
 // const std::map<uint32_t, int> api_id_map = 
@@ -95,10 +122,30 @@ union PdpStatusEnergy {
 //call decode on it
 
 struct CanMsg {
-  uint32_t arb_id;
-  uint8_t data[8];
+	double timestamp;
+	uint32_t arb_id;
+	uint8_t data[8];
 };
 
+enum class PdpStatusData
+{
+	PdpStatusDataNone,
+	PdpStat1,
+	PdpStat2,
+	PdpStat3,
+	PdpStatEnergy
+};
+struct decodedData
+{
+	PdpStatusData which_data;
+	union
+	{
+		PdpStatus1 PdpStat1;
+		PdpStatus2 PdpStat2;
+		PdpStatus3 PdpStat3;
+		PdpStatusEnergy PdpStatEnergy;
+	};
+};
 //Status to CSV Column mappings
 // const std::map<uint32_t, int> dataToColMap = 
 // {
@@ -108,35 +155,202 @@ struct CanMsg {
 //     {0x5D, StatEnergy}
 // };
 
-int main(int argc, char *argv[]) {
-  //usage: first arg is the filename
+CanMsg decodeCanDataFromLine(std::string& rawLine);
+std::vector<char> StringHexToBytes(const std::string& hex);
 
-  std::ifstream inFile(argv[1]);
-  if(!inFile.is_open()) throw std::runtime_error("Could not open file");
+int main(int argc, char* argv[]) {
+	//usage: first arg is the filename
 
-    std::string line, colname;
-    CanMsg canMsg;
+	std::string inputFileName = "candump_july23 - Copy.log"; //todo: not hardcode this
+	if (argc > 1)
+	{
+		std::string inputFileName(argv[1]);
+	}
 
-    // Read the column names
-    if(inFile.good())
-    {
-        // Extract the first line in the file
-        std::getline(inFile, line);
+	std::ifstream inFile(inputFileName);
 
-        // Create a stringstream from line
-        std::stringstream ss(line);
+	std::cout << "Opening file: " + inputFileName << std::endl;
 
-        
-    }
-  inFile.close();
-  cout << "Hello World!";
-  return 0;
+	if (!inFile.is_open()) throw std::runtime_error("Could not open file");
+//	std::ostream outFile("" + inputFileName + "decoded.csv"); //TODO: make this an arg?
+
+	std::string line;
+	CanMsg canMsg;
+
+	if (inFile.good())
+	{
+		// Extract the first line in the file
+		while (std::getline(inFile, line))
+		{
+			// Create a stringstream from line
+			std::stringstream ss(line);
+			CanMsg msg = decodeCanDataFromLine(line);
+			std::cout << msg.arb_id << std::endl;
+		}
+	}
+	inFile.close();
+	std::cout << "Hello World!";
+	system("pause");
+	return 0;
 }
 
 
-void decodeCanDataFromLine(CanMsg &canMsg, string &rawLine)
+CanMsg decodeCanDataFromLine(std::string& rawLine)
 {
-  
+	const int num_cols_log = 3;
+	CanMsg result = { 0 };
+	std::istringstream ss(rawLine);
+	std::string cols[num_cols_log] = { "" };
+	
+	std::string segment;
+
+	for (int i = 0; i < num_cols_log; i++)
+	{
+		if (ss >> segment)
+		{
+			cols[i] = segment;
+		}
+	}
+	
+	result.timestamp = std::stod(cols[0].substr(1, cols[0].size() - 2)); //strip out the open and close brackets
+	
+	std::stringstream  rawArbId_data(cols[2]);
+	std::vector<std::string> arbId_data;
+
+	while (std::getline(rawArbId_data, segment, '#'))
+	{
+		arbId_data.push_back(segment);
+	}
+	
+	if (arbId_data.size() > 1)
+	{
+		result.arb_id = std::stoul(arbId_data[0]);
+		
+		std::vector<char> hexData = StringHexToBytes(arbId_data[1]);
+		
+		for (int i = 0; i < hexData.size() && i < sizeof(result.data); i++)
+		{
+			result.data[i] = hexData[i];
+		}
+	}
+	return result;
 }
 
-void writePdpStatusData1ToFile();
+//void writeDataToFile(int power = 0, int totalCurrent = 0, int busVoltage = 0, int battResistance = 0, int temp = 0, int chan1, int chan2, int chan3, int chan4, int chan5, int chan6, int chan7, int chan8, int chan9, int chan10, int chan11, int chan12, int chan13, int chan14, int chan16); //may be able to convert this to
+void writeDataToFile(std::ostream fileHandle, double timestamp, std::map<PdpDataPoints, int> dataMap)
+{
+	//Build line
+}
+
+std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg& msg)
+{
+	std::map < PdpDataPoints, double> result = { };
+
+	result[PdpDataPoints::Timestamp] = msg.timestamp;
+
+	uint32_t api_id = (msg.arb_id >> 6) & 1023;
+	if (api_id == 0x50)
+	{
+		PdpStatus1 pdpStatus1;
+		memcpy(pdpStatus1.data, msg.data, sizeof(msg.data));
+		result[PdpDataPoints::Channel1] = ((static_cast<uint32_t>(pdpStatus1.bits.chan1_h8) << 2) |
+			pdpStatus1.bits.chan1_l2) *
+			0.125;
+		result[PdpDataPoints::Channel2] = ((static_cast<uint32_t>(pdpStatus1.bits.chan2_h6) << 4) |
+			pdpStatus1.bits.chan2_l4) *
+			0.125;
+		result[PdpDataPoints::Channel3] = ((static_cast<uint32_t>(pdpStatus1.bits.chan3_h4) << 6) |
+			pdpStatus1.bits.chan3_l6) *
+			0.125;
+		result[PdpDataPoints::Channel4] = ((static_cast<uint32_t>(pdpStatus1.bits.chan4_h2) << 8) |
+			pdpStatus1.bits.chan4_l8) *
+			0.125;
+		result[PdpDataPoints::Channel5] = ((static_cast<uint32_t>(pdpStatus1.bits.chan5_h8) << 2) |
+			pdpStatus1.bits.chan5_l2) *
+			0.125;
+		result[PdpDataPoints::Channel6] = ((static_cast<uint32_t>(pdpStatus1.bits.chan6_h6) << 4) |
+			pdpStatus1.bits.chan6_l4) *
+			0.125;
+	}
+	else if (api_id == 0x51)
+	{
+		PdpStatus2 pdpStatus2;
+		memcpy(pdpStatus2.data, msg.data, sizeof(msg.data));
+		result[PdpDataPoints::Channel7] = ((static_cast<uint32_t>(pdpStatus2.bits.chan7_h8) << 2) |
+			pdpStatus2.bits.chan7_l2) *
+			0.125;
+		result[PdpDataPoints::Channel8] = ((static_cast<uint32_t>(pdpStatus2.bits.chan8_h6) << 4) |
+			pdpStatus2.bits.chan8_l4) *
+			0.125;
+		result[PdpDataPoints::Channel9] = ((static_cast<uint32_t>(pdpStatus2.bits.chan9_h4) << 6) |
+			pdpStatus2.bits.chan9_l6) *
+			0.125;
+		result[PdpDataPoints::Channel10] = ((static_cast<uint32_t>(pdpStatus2.bits.chan10_h2) << 8) |
+			pdpStatus2.bits.chan10_l8) *
+			0.125;
+		result[PdpDataPoints::Channel11] = ((static_cast<uint32_t>(pdpStatus2.bits.chan11_h8) << 2) |
+			pdpStatus2.bits.chan11_l2) *
+			0.125;
+		result[PdpDataPoints::Channel12] = ((static_cast<uint32_t>(pdpStatus2.bits.chan12_h6) << 4) |
+			pdpStatus2.bits.chan12_l4) *
+			0.125;
+	}
+	else if (api_id == 0x52)
+	{
+		PdpStatus3 pdpStatus3;
+		memcpy(pdpStatus3.data, msg.data, sizeof(msg.data));
+
+		result[PdpDataPoints::Channel13] = ((static_cast<uint32_t>(pdpStatus3.bits.chan13_h8) << 2) |
+			pdpStatus3.bits.chan13_l2) *
+			0.125;
+		result[PdpDataPoints::Channel14] = ((static_cast<uint32_t>(pdpStatus3.bits.chan14_h6) << 4) |
+			pdpStatus3.bits.chan14_l4) *
+			0.125;
+		result[PdpDataPoints::Channel15] = ((static_cast<uint32_t>(pdpStatus3.bits.chan15_h4) << 6) |
+			pdpStatus3.bits.chan15_l6) *
+			0.125;
+		result[PdpDataPoints::Channel16] = ((static_cast<uint32_t>(pdpStatus3.bits.chan16_h2) << 8) |
+			pdpStatus3.bits.chan16_l8) *
+			0.125;
+
+		result[PdpDataPoints::BusVoltage] = pdpStatus3.bits.busVoltage * 0.05 + 4.0;
+		//Decode temperature
+		result[PdpDataPoints::Temperature] = pdpStatus3.bits.temp * 1.03250836957542 - 67.8564500484966;
+		//Decode battery internal resistance
+		result[PdpDataPoints::BatteryInternalResistance] = pdpStatus3.bits.internalResBattery_mOhms;
+	}
+	else if (api_id == 0x5D)
+	{
+		PdpStatusEnergy pdpStatusEnergy;
+		memcpy(pdpStatusEnergy.data, msg.data, sizeof(msg.data));
+
+		//Decode total current
+		uint32_t raw;
+		raw = pdpStatusEnergy.bits.TotalCurrent_125mAperunit_h8;
+		raw <<= 4;
+		raw |= pdpStatusEnergy.bits.TotalCurrent_125mAperunit_l4;
+		result[PdpDataPoints::TotalCurrent] = 0.125 * raw;
+
+		//Decode total power
+		raw = 0;
+		raw = pdpStatusEnergy.bits.Power_125mWperunit_h4;
+		raw <<= 8;
+		raw |= pdpStatusEnergy.bits.Power_125mWperunit_m8;
+		raw <<= 4;
+		raw |= pdpStatusEnergy.bits.Power_125mWperunit_l4;
+		result[PdpDataPoints::TotalPower] = 0.125 * raw;
+	}
+	return result;
+}
+
+std::vector<char> StringHexToBytes(const std::string& hex) {
+	std::vector<char> bytes;
+
+	for (unsigned int i = 0; i < hex.length(); i += 2) {
+		std::string byteString = hex.substr(i, 2);
+		char byte = (char)strtol(byteString.c_str(), NULL, 16);
+		bytes.push_back(byte);
+	}
+
+	return bytes;
+}
