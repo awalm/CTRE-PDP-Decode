@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 			std::stringstream ss(line);
 			CanMsg msg = decodeCanDataFromLine(line);
 			std::map<PdpDataPoints, double> decodedData = decodeDataFromCanMsg(msg);
-			// writeDataToFile(decodedData, outFile);
+			writeDataToFile(decodedData, outFile);
 		}
 	}
 	inFile.close();
@@ -264,28 +264,6 @@ CanMsg decodeCanDataFromLine(std::string &rawLine)
 	}
 	return result;
 }
-
-//void writeDataToFile(int power = 0, int totalCurrent = 0, int busVoltage = 0, int battResistance = 0, int temp = 0, int chan1, int chan2, int chan3, int chan4, int chan5, int chan6, int chan7, int chan8, int chan9, int chan10, int chan11, int chan12, int chan13, int chan14, int chan16); //may be able to convert this to
-// void writeDataToFile(std::map<PdpDataPoints, double> &dataMap, std::ofstream &fileHandle)
-// {
-// 	std::string s = "";
-// 	for (int i = (int)PdpDataPoints::RESERVED_FIRST + 1; i < (int)PdpDataPoints::RESERVED_LAST; i++)
-// 	{
-// 		if (dataMap.find((PdpDataPoints)i) != dataMap.end())
-// 		{
-// 			s += dataMap[(PdpDataPoints)i];
-// 		}
-// 		​ if (i != (int)PdpDataPoints::RESERVED_LAST - 1) //Don't add comma after last entry
-// 		{
-// 			s += ',';
-// 		}
-// 	}
-// 	​
-// 			std::cout
-// 		<< map_to_string(dataMap) << std::endl;
-// 	//	std::cout << s << std::endl;
-// 	fileHandle << s << std::endl;
-// }
 
 std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 {
@@ -407,13 +385,50 @@ std::vector<char> StringHexToBytes(const std::string &hex)
 	return bytes;
 }
 
-// std::string map_to_string(std::map<PdpDataPoints, double> &map)
-// {
-// 	// std::string out;
+std::string map_to_string(std::map<PdpDataPoints, double> &map)
+{
+	std::string out;
 
-// 	​ for (auto elem : map)
-// 	{
-// 		out += (int)elem.first + ':' + elem.second + '\n';
-// 	}
-// 	​ return out;
-// }
+	for (PdpDataPoints i = PdpDataPoints::RESERVED_FIRST; i < PdpDataPoints::RESERVED_LAST; i = PdpDataPoints(i + 1))
+	{
+		std::map<PdpDataPoints, double>::const_iterator pos = map.find(PdpDataPoints(i));
+
+		if (pos != map.end())
+		{
+			std::cout << "hmm" << pos->second << std::endl;
+
+			out += std::to_string(pos->second);
+		}
+
+		out += ",";
+	}
+
+	out += "\n";
+
+	// std::cout << "map_to_string " << out << std::endl;
+
+	return out;
+}
+
+void writeDataToFile(std::map<PdpDataPoints, double> &dataMap, std::ofstream &fileHandle)
+{
+	std::string s = "";
+
+	for (int i = (int)PdpDataPoints::RESERVED_FIRST + 1; i < (int)PdpDataPoints::RESERVED_LAST; i++)
+	{
+		if (dataMap.find((PdpDataPoints)i) != dataMap.end())
+		{
+			std::cout << "adding " << (PdpDataPoints)i << " = " << dataMap[(PdpDataPoints)i] << std::endl;
+
+			s += dataMap[(PdpDataPoints)i];
+		}
+
+		if (i != (int)PdpDataPoints::RESERVED_LAST - 1)
+		{
+			s += ",";
+		}
+	}
+
+	std::cout << map_to_string(dataMap) << std::endl;
+	fileHandle << map_to_string(dataMap) << std::endl;
+}
