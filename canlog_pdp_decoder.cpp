@@ -90,7 +90,7 @@ union PdpStatusEnergy
 
 enum PdpDataPoints
 {
-	RESERVED_FIRST, //must be first
+	// RESERVED_FIRST, //must be first
 	Timestamp,
 	BusVoltage,
 	TotalCurrent,
@@ -113,7 +113,7 @@ enum PdpDataPoints
 	Channel16,
 	Temperature,
 	BatteryInternalResistance,
-	RESERVED_LAST //must be last
+	// RESERVED_LAST //must be last
 };
 
 //API ID mappings
@@ -165,6 +165,8 @@ struct decodedData
 //     {0x5D, StatEnergy}
 // };
 
+const std::string SPREADSHEET_HEADER = "Timestamp,BusVoltage,TotalCurrent,TotalPower,Channel1,Channel2,Channel3,Channel4,Channel5,Channel6,Channel7,Channel8,Channel9,Channel10,Channel11,Channel12,Channel13,Channel14,Channel15,Channel16,Temperature,BatteryInternalResistance";
+
 CanMsg decodeCanDataFromLine(std::string &rawLine);
 std::vector<char> StringHexToBytes(const std::string &hex);
 std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg);
@@ -188,26 +190,33 @@ int main(int argc, char *argv[])
 {
 	//usage: first arg is the filename
 
-	std::string inputFileName = "candump_july23 - Copy.log"; //todo: not hardcode this
-	if (argc > 1)
+	std::string inputFileName;
+	std::string outputFileName;
+
+	if (argc == 3)
 	{
-		std::string inputFileName(argv[1]);
+		inputFileName = argv[1];
+		outputFileName = argv[2];
+	}
+	else if (argc == 2)
+	{
+		inputFileName = argv[1];
+		outputFileName = inputFileName + ".decoded.csv";
 	}
 
 	std::ifstream inFile(inputFileName);
 
-	std::cout << "Opening file: " + inputFileName << std::endl;
-
 	if (!inFile.is_open())
 		throw std::runtime_error("Could not open file");
 
-	std::ofstream outFile(inputFileName + "decoded.csv"); //TODO: make this an arg?
+	std::ofstream outFile(outputFileName); //TODO: make this an arg?
 
 	std::string line;
 	CanMsg canMsg;
 
 	if (inFile.good())
 	{
+		outFile << SPREADSHEET_HEADER << std::endl;
 		// Extract the first line in the file
 		while (std::getline(inFile, line))
 		{
@@ -220,7 +229,6 @@ int main(int argc, char *argv[])
 	}
 	inFile.close();
 	outFile.close();
-	// system("pause");
 	return 0;
 }
 
@@ -275,7 +283,6 @@ std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 
 	if (api_id == 0x50)
 	{
-		// std::cout << 1 << std::endl;
 		PdpStatus1 pdpStatus1;
 		memcpy(pdpStatus1.data, msg.data, sizeof(msg.data));
 		result[PdpDataPoints::Channel1] = ((static_cast<uint32_t>(pdpStatus1.bits.chan1_h8) << 2) |
@@ -299,7 +306,6 @@ std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 	}
 	else if (api_id == 0x51)
 	{
-		// std::cout << 2 << std::endl;
 		PdpStatus2 pdpStatus2;
 		memcpy(pdpStatus2.data, msg.data, sizeof(msg.data));
 		result[PdpDataPoints::Channel7] = ((static_cast<uint32_t>(pdpStatus2.bits.chan7_h8) << 2) |
@@ -323,7 +329,6 @@ std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 	}
 	else if (api_id == 0x52)
 	{
-		// std::cout << 3 << std::endl;
 		PdpStatus3 pdpStatus3;
 		memcpy(pdpStatus3.data, msg.data, sizeof(msg.data));
 
@@ -348,7 +353,6 @@ std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 	}
 	else if (api_id == 0x5D)
 	{
-		// std::cout << 4 << std::endl;
 		PdpStatusEnergy pdpStatusEnergy;
 		memcpy(pdpStatusEnergy.data, msg.data, sizeof(msg.data));
 
@@ -389,46 +393,22 @@ std::string map_to_string(std::map<PdpDataPoints, double> &map)
 {
 	std::string out;
 
-	for (PdpDataPoints i = PdpDataPoints::RESERVED_FIRST; i < PdpDataPoints::RESERVED_LAST; i = PdpDataPoints(i + 1))
+	for (PdpDataPoints i = PdpDataPoints::Timestamp; i < PdpDataPoints::BatteryInternalResistance; i = PdpDataPoints(i + 1))
 	{
 		std::map<PdpDataPoints, double>::const_iterator pos = map.find(PdpDataPoints(i));
 
 		if (pos != map.end())
 		{
-			std::cout << "hmm" << pos->second << std::endl;
-
 			out += std::to_string(pos->second);
 		}
 
 		out += ",";
 	}
 
-	out += "\n";
-
-	// std::cout << "map_to_string " << out << std::endl;
-
 	return out;
 }
 
 void writeDataToFile(std::map<PdpDataPoints, double> &dataMap, std::ofstream &fileHandle)
 {
-	std::string s = "";
-
-	for (int i = (int)PdpDataPoints::RESERVED_FIRST + 1; i < (int)PdpDataPoints::RESERVED_LAST; i++)
-	{
-		if (dataMap.find((PdpDataPoints)i) != dataMap.end())
-		{
-			std::cout << "adding " << (PdpDataPoints)i << " = " << dataMap[(PdpDataPoints)i] << std::endl;
-
-			s += dataMap[(PdpDataPoints)i];
-		}
-
-		if (i != (int)PdpDataPoints::RESERVED_LAST - 1)
-		{
-			s += ",";
-		}
-	}
-
-	std::cout << map_to_string(dataMap) << std::endl;
 	fileHandle << map_to_string(dataMap) << std::endl;
 }
