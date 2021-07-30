@@ -275,7 +275,7 @@ CanMsg decodeCanDataFromLine(std::string &rawLine)
 
 std::map<PdpDataPoints, double> decodeDataFromCanMsg(CanMsg &msg)
 {
-	std::map<PdpDataPoints, double> result = {};
+	std::map<PdpDataPoints, double> result;
 
 	result[PdpDataPoints::Timestamp] = msg.timestamp;
 
